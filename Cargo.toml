@@ -1,0 +1,13 @@
+[package]
+name = "hotkey-daemon"
+version = "0.1.0"
+authors = ["Jouni Sunnari <dz4tune@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+glob = "0.3.0"
+nix  = "0.14.1"
+libc = "0.2.58"
+num        = "0.2.0"
+num-derive = "0.2.5"
+num-traits = "0.2.8"
