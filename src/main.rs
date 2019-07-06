@@ -5,10 +5,10 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::mem::size_of;
 use std::mem::transmute;
-use std::os::unix::io::AsRawFd;
 use std::time::Duration;
 
-use crate::input_event_to_enum::{convert, InputEvent};
+use crate::input_event_to_enum::{convert, InputEvent, KeyEvent, Key};
+use std::collections::HashSet;
 
 mod input_event_to_enum;
 
@@ -34,9 +34,14 @@ impl Iterator for Events {
 fn main() -> std::io::Result<()> {
     let file = File::open("/dev/input/by-path/platform-i8042-serio-0-event-kbd")?;
     let events = Events{ file };
+    let mut pressed = HashSet::new();
     for (_d, ev) in events {
-        if let input_event_to_enum::InputEvent::KEY(action) = ev {
-            println!("{:?}", action);
+        if let InputEvent::KEY(action) = ev {
+            match action {
+               KeyEvent::Autorepeat(k) => continue,
+               KeyEvent::Press(k) => { pressed.insert(k);  println!("{:?} ", pressed); },
+               KeyEvent::Release(k) => {  pressed.remove(&k); }
+            }
         }
     }
     Ok(())

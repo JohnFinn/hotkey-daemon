@@ -1,6 +1,6 @@
 // this file is created by grepping and seding /usr/include/linux/input-event-codes.h
 
-#[derive(Debug, FromPrimitive)]
+#[derive(Debug, FromPrimitive, PartialEq, Eq, Hash)]
 pub enum Key {
     RESERVED    = 0,
     ESC			= 1,
