@@ -32,15 +32,15 @@ impl Iterator for Events {
     }
 }
 
-struct HotKeyHandler<'a> {
+struct KeyComboHandler<'a> {
     config: HashMap<BTreeSet<Key>, &'a dyn Fn()>,
     pressed: BTreeSet<Key>
 }
 
-impl<'a> HotKeyHandler<'a> {
+impl<'a> KeyComboHandler<'a> {
 
-    fn new(config: HashMap<BTreeSet<Key>, &'a dyn Fn()>) -> HotKeyHandler {
-        HotKeyHandler {
+    fn new(config: HashMap<BTreeSet<Key>, &'a dyn Fn()>) -> KeyComboHandler {
+        KeyComboHandler {
             config,
             pressed: BTreeSet::new()
         }
@@ -59,7 +59,6 @@ impl<'a> HotKeyHandler<'a> {
         }
     }
 
-
     fn handle_all(& mut self, events: Events) {
         for (_d, ev) in events {
             if let InputEvent::KEY(action) = ev {
@@ -73,11 +72,8 @@ fn main() -> std::io::Result<()> {
     let mut config = HashMap::<BTreeSet<Key>, &dyn Fn()>::new();
     config.insert([Key::A, Key::B].iter().cloned().collect(), &|| println!("A und B") );
     config.insert([Key::B, Key::C].iter().cloned().collect(), &|| println!("B und C") );
-
-    let mut  hkh = HotKeyHandler::new(config);
-    let file = File::open("/dev/input/by-path/platform-i8042-serio-0-event-kbd")?;
-    hkh.handle_all(Events{file});
-
+    let mut ksh = KeyComboHandler::new(config);
+    ksh.handle_all(Events{file:File::open("/dev/input/by-path/platform-i8042-serio-0-event-kbd")?});
     Ok(())
 }
 
