@@ -46,15 +46,19 @@ impl<'a> KeyComboHandler<'a> {
         }
     }
 
+    fn handle_binding(&self) {
+        if let Some(func) = self.config.get(&self.pressed) {
+            func();
+        }
+    }
+
     fn handle_one(&mut self, event: KeyEvent) {
         match event {
-            KeyEvent::Autorepeat(_) => {},
+            KeyEvent::Autorepeat(_) => { self.handle_binding(); },
             KeyEvent::Release(key) => { self.pressed.remove(&key); },
             KeyEvent::Press(key) => {
                 self.pressed.insert(key);
-                if let Some(func) = self.config.get(&self.pressed) {
-                    func();
-                }
+                self.handle_binding();
             }
         }
     }
