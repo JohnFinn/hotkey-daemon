@@ -33,8 +33,17 @@ impl Iterator for Events {
 
 fn main() {
     let mut config = HashMap::<BTreeSet<Key>, &dyn Fn()>::new();
-    config.insert([Key::BRIGHTNESSUP].iter().cloned().collect(), &|| println!("brightnellup"));
-    config.insert([Key::LEFTMETA, Key::ENTER].iter().cloned().collect(), &|| {process::Command::new("termite").spawn(); });
+    config.insert(
+        [Key::BRIGHTNESSUP].iter().cloned().collect(),
+        &|| println!("brightnellup")
+    );
+    config.insert(
+        [Key::LEFTMETA, Key::ENTER].iter().cloned().collect(),
+        &|| {
+            println!("super+enter");
+            process::Command::new("termite").spawn();
+        }
+    );
 
     let file = File::open("/dev/input/by-path/platform-i8042-serio-0-event-kbd").unwrap();
     let mut key_events = Events{file}.filter_map(|(_, ev)| match ev {
