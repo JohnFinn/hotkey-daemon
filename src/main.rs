@@ -6,7 +6,9 @@ use std::io::prelude::*;
 use std::mem::size_of;
 use std::mem::transmute;
 use std::time::Duration;
-use std::process;
+use nix;
+use nix::unistd::{fork, ForkResult, setuid, Uid, execvp};
+use std::ffi::CString;
 
 mod input_event_to_enum;
 mod key_combo_handler;
@@ -31,6 +33,21 @@ impl Iterator for Events {
     }
 }
 
+fn execute(command: &str, args: &[&str]) {
+    match fork() {
+        Ok(ForkResult::Parent { child, .. }) => {
+            println!("Continuing execution in parent process, new child has pid: {}", child);
+        }
+        Ok(ForkResult::Child) => {
+            setuid(Uid::from_raw(1000)).expect("unable to setuid");
+            // todo optimize this line
+            let args: Vec<CString> = args.iter().map(|&arg|CString::new(arg).unwrap()).collect();
+            execvp(&CString::new(command).unwrap(), args.as_slice()).expect("unable to execv");
+        }
+        Err(_) => eprintln!("fork failed"),
+    }
+}
+
 fn main() {
     let mut config = HashMap::<BTreeSet<Key>, &dyn Fn()>::new();
     config.insert(
@@ -38,10 +55,9 @@ fn main() {
         &|| println!("brightnellup")
     );
     config.insert(
-        [Key::LEFTMETA, Key::ENTER].iter().cloned().collect(),
+        [Key::LEFTMETA, Key::LEFTALT].iter().cloned().collect(),
         &|| {
-            println!("super+enter");
-            process::Command::new("termite").spawn();
+            execute("rofi", &["-show-icons", "-show", "drun"]);
         }
     );
 
