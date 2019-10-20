@@ -59,21 +59,21 @@ impl<'a> KeyComboHandler<'a> {
         }
     }
 
-    fn handle_all(& mut self, events: Events) {
-        for (_d, ev) in events {
-            if let InputEvent::KEY(action) = ev {
-                self.handle_one(action);
-            }
-        }
+    fn handle_all(&mut self, events: &mut dyn Iterator<Item=(KeyEvent)>) {
+        events.for_each(|ev| self.handle_one(ev));
     }
 }
 
 fn main() -> std::io::Result<()> {
     let mut config = HashMap::<BTreeSet<Key>, &dyn Fn()>::new();
-    config.insert([Key::A, Key::B].iter().cloned().collect(), &|| println!("A und B") );
-    config.insert([Key::B, Key::C].iter().cloned().collect(), &|| println!("B und C") );
+    config.insert([Key::BRIGHTNESSUP].iter().cloned().collect(), &|| println!("brightnellup"));
     let mut ksh = KeyComboHandler::new(config);
-    ksh.handle_all(Events{file:File::open("/dev/input/by-path/platform-i8042-serio-0-event-kbd")?});
+    let file = File::open("/dev/input/by-path/platform-i8042-serio-0-event-kbd")?;
+    let mut key_events = Events{file}.filter_map(|(_, ev)| match ev {
+        InputEvent::KEY(key_ev) => Some(key_ev),
+        _ => None
+    });
+    ksh.handle_all(&mut key_events);
     Ok(())
 }
 
