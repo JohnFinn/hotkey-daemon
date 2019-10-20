@@ -64,16 +64,16 @@ impl<'a> KeyComboHandler<'a> {
     }
 }
 
-fn main() -> std::io::Result<()> {
+fn main() {
     let mut config = HashMap::<BTreeSet<Key>, &dyn Fn()>::new();
-    config.insert([Key::BRIGHTNESSUP].iter().cloned().collect(), &|| println!("brightnellup"));
-    let mut ksh = KeyComboHandler::new(config);
-    let file = File::open("/dev/input/by-path/platform-i8042-serio-0-event-kbd")?;
+    config.insert([Key::BRIGHTNESSUP].iter().cloned().collect(), &|| println!("brightnellup")).unwrap();
+    config.insert([Key::A, Key::B].iter().cloned().collect(), &|| println!("a+b")).unwrap();
+
+    let file = File::open("/dev/input/by-path/platform-i8042-serio-0-event-kbd").unwrap();
     let mut key_events = Events{file}.filter_map(|(_, ev)| match ev {
         InputEvent::KEY(key_ev) => Some(key_ev),
         _ => None
     });
+    let mut ksh = KeyComboHandler::new(config);
     ksh.handle_all(&mut key_events);
-    Ok(())
 }
-
