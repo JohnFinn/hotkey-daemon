@@ -6,12 +6,11 @@ use std::io::prelude::*;
 use std::mem::size_of;
 use std::mem::transmute;
 use std::time::Duration;
-
-use crate::input_event_to_enum::{convert, InputEvent, KeyEvent, Key};
-use std::collections::{HashSet, HashMap, BTreeSet};
-use crate::input_event_to_enum::InputEvent::KEY;
+use std::process;
 
 mod input_event_to_enum;
+mod key_combo_handler;
+use key_combo_handler::*;
 
 struct Events {
     file: File
@@ -32,46 +31,10 @@ impl Iterator for Events {
     }
 }
 
-struct KeyComboHandler<'a> {
-    config: HashMap<BTreeSet<Key>, &'a dyn Fn()>,
-    pressed: BTreeSet<Key>
-}
-
-impl<'a> KeyComboHandler<'a> {
-
-    fn new(config: HashMap<BTreeSet<Key>, &'a dyn Fn()>) -> KeyComboHandler {
-        KeyComboHandler {
-            config,
-            pressed: BTreeSet::new()
-        }
-    }
-
-    fn handle_binding(&self) {
-        if let Some(func) = self.config.get(&self.pressed) {
-            func();
-        }
-    }
-
-    fn handle_one(&mut self, event: KeyEvent) {
-        match event {
-            KeyEvent::Autorepeat(_) => { self.handle_binding(); },
-            KeyEvent::Release(key) => { self.pressed.remove(&key); },
-            KeyEvent::Press(key) => {
-                self.pressed.insert(key);
-                self.handle_binding();
-            }
-        }
-    }
-
-    fn handle_all(&mut self, events: &mut dyn Iterator<Item=(KeyEvent)>) {
-        events.for_each(|ev| self.handle_one(ev));
-    }
-}
-
 fn main() {
     let mut config = HashMap::<BTreeSet<Key>, &dyn Fn()>::new();
     config.insert([Key::BRIGHTNESSUP].iter().cloned().collect(), &|| println!("brightnellup"));
-    config.insert([Key::A, Key::B].iter().cloned().collect(), &|| println!("a+b"));
+    config.insert([Key::LEFTMETA, Key::ENTER].iter().cloned().collect(), &|| {process::Command::new("termite").spawn(); });
 
     let file = File::open("/dev/input/by-path/platform-i8042-serio-0-event-kbd").unwrap();
     let mut key_events = Events{file}.filter_map(|(_, ev)| match ev {
